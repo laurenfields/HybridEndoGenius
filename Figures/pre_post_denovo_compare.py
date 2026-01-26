@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 26 10:01:26 2026
+Created on Mon Jan 26 11:49:05 2026
 
 @author: field
 """
@@ -285,6 +285,7 @@ if p_val_y < 0.05:
 if p_val_total < 0.05:
     print(f"   ✓ Total coverage is SIGNIFICANTLY different between analyses (p < 0.05)")
 
+
 #%% Create Comparative Visualizations
 
 print("\n" + "="*70)
@@ -353,9 +354,10 @@ post_denovo_df['Y_Avg_Intensity'] = post_y_int
 print("   ✓ Calculated intensities for both analyses")
 
 fig = plt.figure(figsize=(20, 12))
+fig.subplots_adjust(bottom=0.08, top=0.95, left=0.05, right=0.98, hspace=0.3, wspace=0.25)
 
 # ============================================================================
-# PLOT 1: Combined scatter plot with both analyses
+# PLOT 1: Combined scatter plot with simplified labels (2 regions only)
 # ============================================================================
 ax1 = fig.add_subplot(231)
 
@@ -373,55 +375,36 @@ max_axis = max(pre_denovo_df['% Coverage b'].max(), pre_denovo_df['% Coverage y'
                post_denovo_df['% Coverage b'].max(), post_denovo_df['% Coverage y'].max(), 100) + 10
 
 ax1.plot([0, max_axis], [0, max_axis], 'k--', alpha=0.5, linewidth=2, label='Equal b and y')
-ax1.axhline(y=50, color='gray', linestyle=':', linewidth=1, alpha=0.5)
-ax1.axvline(x=50, color='gray', linestyle=':', linewidth=1, alpha=0.5)
 
-# Calculate percentages for each quadrant
-# Pre-De Novo
-pre_q1 = ((pre_denovo_df['% Coverage y'] >= 50) & (pre_denovo_df['% Coverage b'] >= 50)).sum()
-pre_q2 = ((pre_denovo_df['% Coverage y'] < 50) & (pre_denovo_df['% Coverage b'] >= 50)).sum()
-pre_q3 = ((pre_denovo_df['% Coverage y'] < 50) & (pre_denovo_df['% Coverage b'] < 50)).sum()
-pre_q4 = ((pre_denovo_df['% Coverage y'] >= 50) & (pre_denovo_df['% Coverage b'] < 50)).sum()
+# Calculate percentages for above/below diagonal only
+# Above diagonal: more b-ions
+pre_above = (pre_denovo_df['% Coverage b'] > pre_denovo_df['% Coverage y']).sum()
+post_above = (post_denovo_df['% Coverage b'] > post_denovo_df['% Coverage y']).sum()
 
-# Post-De Novo
-post_q1 = ((post_denovo_df['% Coverage y'] >= 50) & (post_denovo_df['% Coverage b'] >= 50)).sum()
-post_q2 = ((post_denovo_df['% Coverage y'] < 50) & (post_denovo_df['% Coverage b'] >= 50)).sum()
-post_q3 = ((post_denovo_df['% Coverage y'] < 50) & (post_denovo_df['% Coverage b'] < 50)).sum()
-post_q4 = ((post_denovo_df['% Coverage y'] >= 50) & (post_denovo_df['% Coverage b'] < 50)).sum()
+# Below diagonal: more y-ions
+pre_below = (pre_denovo_df['% Coverage b'] < pre_denovo_df['% Coverage y']).sum()
+post_below = (post_denovo_df['% Coverage b'] < post_denovo_df['% Coverage y']).sum()
 
-# Add text labels with percentages
-label_x_low = max_axis * 0.25
-label_x_high = max_axis * 0.75
-label_y_low = max_axis * 0.25
-label_y_high = max_axis * 0.75
+# Add shaded regions
+ax1.fill_between([0, max_axis], [0, max_axis], max_axis, alpha=0.1, color='red')
+ax1.fill_between([0, max_axis], 0, [0, max_axis], alpha=0.1, color='blue')
 
-# Quadrant 2: Low Y, High B
-ax1.text(label_x_low, label_y_high, 
-        f'Pre: {pre_q2} ({pre_q2/len(pre_denovo_df)*100:.1f}%)\n'
-        f'Post: {post_q2} ({post_q2/len(post_denovo_df)*100:.1f}%)',
-        fontsize=9, ha='center', va='center',
-        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
+# Add text labels - only 2 labels
+# Above diagonal (more b-ions) - position in upper left area
+ax1.text(max_axis * 0.15, max_axis * 0.85, 
+        f'More B-ions\n'
+        f'Pre: {pre_above} ({pre_above/len(pre_denovo_df)*100:.1f}%)\n'
+        f'Post: {post_above} ({post_above/len(post_denovo_df)*100:.1f}%)',
+        fontsize=10, ha='left', va='top',
+        bbox=dict(boxstyle='round', facecolor='salmon', alpha=0.8, edgecolor='darkred', linewidth=2))
 
-# Quadrant 1: High Y, High B
-ax1.text(label_x_high, label_y_high,
-        f'Pre: {pre_q1} ({pre_q1/len(pre_denovo_df)*100:.1f}%)\n'
-        f'Post: {post_q1} ({post_q1/len(post_denovo_df)*100:.1f}%)',
-        fontsize=9, ha='center', va='center',
-        bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
-
-# Quadrant 3: Low Y, Low B
-ax1.text(label_x_low, label_y_low,
-        f'Pre: {pre_q3} ({pre_q3/len(pre_denovo_df)*100:.1f}%)\n'
-        f'Post: {post_q3} ({post_q3/len(post_denovo_df)*100:.1f}%)',
-        fontsize=9, ha='center', va='center',
-        bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7))
-
-# Quadrant 4: High Y, Low B
-ax1.text(label_x_high, label_y_low,
-        f'Pre: {pre_q4} ({pre_q4/len(pre_denovo_df)*100:.1f}%)\n'
-        f'Post: {post_q4} ({post_q4/len(post_denovo_df)*100:.1f}%)',
-        fontsize=9, ha='center', va='center',
-        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
+# Below diagonal (more y-ions) - position in lower right area
+ax1.text(max_axis * 0.85, max_axis * 0.15,
+        f'More Y-ions\n'
+        f'Pre: {pre_below} ({pre_below/len(pre_denovo_df)*100:.1f}%)\n'
+        f'Post: {post_below} ({post_below/len(post_denovo_df)*100:.1f}%)',
+        fontsize=10, ha='right', va='bottom',
+        bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8, edgecolor='darkblue', linewidth=2))
 
 ax1.set_xlabel('% Coverage Y-ions', fontsize=11, fontweight='bold')
 ax1.set_ylabel('% Coverage B-ions', fontsize=11, fontweight='bold')
@@ -433,109 +416,154 @@ ax1.set_aspect('equal')
 ax1.legend(loc='upper left', fontsize=9)
 
 # ============================================================================
-# PLOT 2: Box plot comparison - B-ions
+# PLOT 2: Paired box plot - B-ions and Y-ions together
 # ============================================================================
 ax2 = fig.add_subplot(232)
 
-box_data_b = [pre_denovo_df['% Coverage b'], post_denovo_df['% Coverage b']]
-bp_b = ax2.boxplot(box_data_b, labels=['Pre-De Novo', 'Post-De Novo'], patch_artist=True,
-                  showmeans=True, meanline=True)
-bp_b['boxes'][0].set_facecolor('orange')
-bp_b['boxes'][0].set_alpha(0.7)
-bp_b['boxes'][1].set_facecolor('purple')
-bp_b['boxes'][1].set_alpha(0.7)
+# Prepare data: [Pre B, Pre Y, Post B, Post Y]
+box_data_paired = [
+    pre_denovo_df['% Coverage b'],
+    pre_denovo_df['% Coverage y'],
+    post_denovo_df['% Coverage b'],
+    post_denovo_df['% Coverage y']
+]
 
-ax2.set_ylabel('% Coverage B-ions', fontsize=11, fontweight='bold')
-ax2.set_title('B-ion Coverage Comparison', fontsize=12, fontweight='bold')
-ax2.grid(True, alpha=0.3, axis='y')
+positions = [1, 2, 4, 5]
+bp_paired = ax2.boxplot(box_data_paired, positions=positions, 
+                        labels=['B-ions', 'Y-ions', 'B-ions', 'Y-ions'],
+                        patch_artist=True, showmeans=True, meanline=True, widths=0.6)
 
+# Color the boxes
+bp_paired['boxes'][0].set_facecolor('orange')  # Pre B
+bp_paired['boxes'][0].set_alpha(0.7)
+bp_paired['boxes'][1].set_facecolor('orange')  # Pre Y
+bp_paired['boxes'][1].set_alpha(0.7)
+bp_paired['boxes'][2].set_facecolor('purple')  # Post B
+bp_paired['boxes'][2].set_alpha(0.7)
+bp_paired['boxes'][3].set_facecolor('purple')  # Post Y
+bp_paired['boxes'][3].set_alpha(0.7)
+
+# Add group labels (position them inside the plot area)
+ax2.text(1.5, -5, 'Pre-De Novo', ha='center', fontsize=11, fontweight='bold')
+ax2.text(4.5, -5, 'Post-De Novo', ha='center', fontsize=11, fontweight='bold')
+
+# Add mean annotations
 mean_pre_b = pre_denovo_df['% Coverage b'].mean()
+mean_pre_y = pre_denovo_df['% Coverage y'].mean()
 mean_post_b = post_denovo_df['% Coverage b'].mean()
-ax2.text(1, mean_pre_b, f'μ={mean_pre_b:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=9)
-ax2.text(2, mean_post_b, f'μ={mean_post_b:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=9)
+mean_post_y = post_denovo_df['% Coverage y'].mean()
+
+ax2.text(1, mean_pre_b, f'{mean_pre_b:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=8)
+ax2.text(2, mean_pre_y, f'{mean_pre_y:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=8)
+ax2.text(4, mean_post_b, f'{mean_post_b:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=8)
+ax2.text(5, mean_post_y, f'{mean_post_y:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=8)
+
+ax2.set_ylabel('% Coverage', fontsize=11, fontweight='bold')
+ax2.set_title('Ion Coverage Comparison (Paired)', fontsize=12, fontweight='bold')
+ax2.grid(True, alpha=0.3, axis='y')
+ax2.set_xlim(0, 6)
 
 # ============================================================================
-# PLOT 3: Box plot comparison - Y-ions
+# PLOT 3: Total Coverage Comparison
 # ============================================================================
 ax3 = fig.add_subplot(233)
 
-box_data_y = [pre_denovo_df['% Coverage y'], post_denovo_df['% Coverage y']]
-bp_y = ax3.boxplot(box_data_y, labels=['Pre-De Novo', 'Post-De Novo'], patch_artist=True,
-                  showmeans=True, meanline=True)
-bp_y['boxes'][0].set_facecolor('orange')
-bp_y['boxes'][0].set_alpha(0.7)
-bp_y['boxes'][1].set_facecolor('purple')
-bp_y['boxes'][1].set_alpha(0.7)
+box_data_total = [pre_denovo_df['Total_Coverage'], post_denovo_df['Total_Coverage']]
+bp_total = ax3.boxplot(box_data_total, labels=['Pre-De Novo', 'Post-De Novo'], 
+                       patch_artist=True, showmeans=True, meanline=True)
+bp_total['boxes'][0].set_facecolor('orange')
+bp_total['boxes'][0].set_alpha(0.7)
+bp_total['boxes'][1].set_facecolor('purple')
+bp_total['boxes'][1].set_alpha(0.7)
 
-ax3.set_ylabel('% Coverage Y-ions', fontsize=11, fontweight='bold')
-ax3.set_title('Y-ion Coverage Comparison', fontsize=12, fontweight='bold')
+ax3.set_ylabel('% Total Coverage (B + Y)', fontsize=11, fontweight='bold')
+ax3.set_title('Total Coverage Comparison', fontsize=12, fontweight='bold')
 ax3.grid(True, alpha=0.3, axis='y')
 
-mean_pre_y = pre_denovo_df['% Coverage y'].mean()
-mean_post_y = post_denovo_df['% Coverage y'].mean()
-ax3.text(1, mean_pre_y, f'μ={mean_pre_y:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=9)
-ax3.text(2, mean_post_y, f'μ={mean_post_y:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=9)
+mean_pre_total = pre_denovo_df['Total_Coverage'].mean()
+mean_post_total = post_denovo_df['Total_Coverage'].mean()
+ax3.text(1, mean_pre_total, f'{mean_pre_total:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=9)
+ax3.text(2, mean_post_total, f'{mean_post_total:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=9)
 
 # ============================================================================
-# PLOT 4: B-ion vs Y-ion Intensity Comparison
+# PLOT 4: Ion Count Comparison (Paired)
 # ============================================================================
 ax4 = fig.add_subplot(234)
 
-# Filter for non-zero intensities
-pre_nonzero = (pre_denovo_df['B_Avg_Intensity'] > 0) & (pre_denovo_df['Y_Avg_Intensity'] > 0)
-post_nonzero = (post_denovo_df['B_Avg_Intensity'] > 0) & (post_denovo_df['Y_Avg_Intensity'] > 0)
+# Ion count data
+box_data_counts = [
+    pre_denovo_df['Number of b-ions'],
+    pre_denovo_df['Number of y-ions'],
+    post_denovo_df['Number of b-ions'],
+    post_denovo_df['Number of y-ions']
+]
 
-pre_filt = pre_denovo_df[pre_nonzero]
-post_filt = post_denovo_df[post_nonzero]
+positions_counts = [1, 2, 4, 5]
+bp_counts = ax4.boxplot(box_data_counts, positions=positions_counts,
+                        labels=['B-ions', 'Y-ions', 'B-ions', 'Y-ions'],
+                        patch_artist=True, showmeans=True, meanline=True, widths=0.6)
 
-ax4.scatter(pre_filt['Y_Avg_Intensity'], pre_filt['B_Avg_Intensity'],
-           color='orange', alpha=0.4, s=40, edgecolors='darkorange', linewidth=0.5,
-           label='Pre-De Novo')
+# Color the boxes
+bp_counts['boxes'][0].set_facecolor('orange')
+bp_counts['boxes'][0].set_alpha(0.7)
+bp_counts['boxes'][1].set_facecolor('orange')
+bp_counts['boxes'][1].set_alpha(0.7)
+bp_counts['boxes'][2].set_facecolor('purple')
+bp_counts['boxes'][2].set_alpha(0.7)
+bp_counts['boxes'][3].set_facecolor('purple')
+bp_counts['boxes'][3].set_alpha(0.7)
 
-ax4.scatter(post_filt['Y_Avg_Intensity'], post_filt['B_Avg_Intensity'],
-           color='purple', alpha=0.4, s=40, edgecolors='indigo', linewidth=0.5,
-           label='Post-De Novo')
+# Add group labels (position them inside the plot area)
+ax4.text(1.5, -1, 'Pre-De Novo', ha='center', fontsize=11, fontweight='bold')
+ax4.text(4.5, -1, 'Post-De Novo', ha='center', fontsize=11, fontweight='bold')
 
-max_intensity = max(pre_filt['B_Avg_Intensity'].max() if len(pre_filt) > 0 else 0,
-                    pre_filt['Y_Avg_Intensity'].max() if len(pre_filt) > 0 else 0,
-                    post_filt['B_Avg_Intensity'].max() if len(post_filt) > 0 else 0,
-                    post_filt['Y_Avg_Intensity'].max() if len(post_filt) > 0 else 0)
-
-ax4.plot([0, max_intensity], [0, max_intensity], 'k--', alpha=0.5, linewidth=2)
-
-ax4.set_xlabel('Avg Y-ion Intensity', fontsize=11, fontweight='bold')
-ax4.set_ylabel('Avg B-ion Intensity', fontsize=11, fontweight='bold')
-ax4.set_title('B vs Y Ion Intensity: Pre vs Post', fontsize=12, fontweight='bold')
-ax4.grid(True, alpha=0.3)
-ax4.set_aspect('equal')
-ax4.legend(loc='upper left', fontsize=9)
+ax4.set_ylabel('Number of Ions Detected', fontsize=11, fontweight='bold')
+ax4.set_title('Ion Count Comparison (Paired)', fontsize=12, fontweight='bold')
+ax4.grid(True, alpha=0.3, axis='y')
+ax4.set_xlim(0, 6)
 
 # ============================================================================
-# PLOT 5: Average Intensity Comparison (LOG SCALE)
+# PLOT 5: B and Y Ion Intensity Comparison (Paired, LOG SCALE)
 # ============================================================================
 ax5 = fig.add_subplot(235)
 
-# Calculate average intensities (b + y) / 2
-pre_denovo_df['Avg_Total_Intensity'] = (pre_denovo_df['B_Avg_Intensity'] + pre_denovo_df['Y_Avg_Intensity']) / 2
-post_denovo_df['Avg_Total_Intensity'] = (post_denovo_df['B_Avg_Intensity'] + post_denovo_df['Y_Avg_Intensity']) / 2
+# Prepare intensity data: [Pre B, Pre Y, Post B, Post Y]
+# Filter non-zero values
+pre_b_nonzero = pre_denovo_df['B_Avg_Intensity'][pre_denovo_df['B_Avg_Intensity'] > 0]
+pre_y_nonzero = pre_denovo_df['Y_Avg_Intensity'][pre_denovo_df['Y_Avg_Intensity'] > 0]
+post_b_nonzero = post_denovo_df['B_Avg_Intensity'][post_denovo_df['B_Avg_Intensity'] > 0]
+post_y_nonzero = post_denovo_df['Y_Avg_Intensity'][post_denovo_df['Y_Avg_Intensity'] > 0]
 
-# Filter non-zero values for log scale
-pre_nonzero_int = pre_denovo_df['Avg_Total_Intensity'][pre_denovo_df['Avg_Total_Intensity'] > 0]
-post_nonzero_int = post_denovo_df['Avg_Total_Intensity'][post_denovo_df['Avg_Total_Intensity'] > 0]
+box_data_intensity = [pre_b_nonzero, pre_y_nonzero, post_b_nonzero, post_y_nonzero]
 
-box_data_intensity = [pre_nonzero_int, post_nonzero_int]
+positions_int = [1, 2, 4, 5]
+bp_int = ax5.boxplot(box_data_intensity, positions=positions_int,
+                     labels=['B-ions', 'Y-ions', 'B-ions', 'Y-ions'],
+                     patch_artist=True, showmeans=True, meanline=True, widths=0.6)
 
-bp_int = ax5.boxplot(box_data_intensity, labels=['Pre-De Novo', 'Post-De Novo'], 
-                     patch_artist=True, showmeans=True, meanline=True)
+# Color the boxes
 bp_int['boxes'][0].set_facecolor('orange')
 bp_int['boxes'][0].set_alpha(0.7)
-bp_int['boxes'][1].set_facecolor('purple')
+bp_int['boxes'][1].set_facecolor('orange')
 bp_int['boxes'][1].set_alpha(0.7)
+bp_int['boxes'][2].set_facecolor('purple')
+bp_int['boxes'][2].set_alpha(0.7)
+bp_int['boxes'][3].set_facecolor('purple')
+bp_int['boxes'][3].set_alpha(0.7)
+
+# Add group labels (using annotation instead to avoid extending bounds)
+ax5.annotate('Pre-De Novo', xy=(1.5, 0), xytext=(1.5, 0), 
+            ha='center', fontsize=11, fontweight='bold',
+            xycoords=('data', 'axes fraction'), textcoords=('data', 'axes fraction'))
+ax5.annotate('Post-De Novo', xy=(4.5, 0), xytext=(4.5, 0),
+            ha='center', fontsize=11, fontweight='bold',
+            xycoords=('data', 'axes fraction'), textcoords=('data', 'axes fraction'))
 
 ax5.set_ylabel('Average Fragment Intensity (log scale)', fontsize=11, fontweight='bold')
-ax5.set_title('Average Intensity Comparison', fontsize=12, fontweight='bold')
+ax5.set_title('Ion Intensity Comparison (Paired)', fontsize=12, fontweight='bold')
 ax5.set_yscale('log')  # Set log scale
 ax5.grid(True, alpha=0.3, axis='y', which='both')  # Show grid for both major and minor ticks
+ax5.set_xlim(0, 6)
 
 # ============================================================================
 # PLOT 6: B/Y Ratio comparison
@@ -561,13 +589,17 @@ ax6.legend(fontsize=9)
 ax6.grid(True, alpha=0.3, axis='y')
 
 plt.tight_layout()
-plt.show()
 
 print(f"\n   ✓ Comparison plots created!")
 
-# Save figure
-fig.savefig(output_plots, dpi=300, bbox_inches='tight')
-print(f"   ✓ Plots saved to: {output_plots}")
+# Save figure (removed bbox_inches='tight' to prevent oversized bounds)
+fig.savefig(output_plots, dpi=300)
+fig.savefig(output_plots.replace('.png', '.svg'), format='svg')
+print(f"   ✓ PNG saved to: {output_plots}")
+print(f"   ✓ SVG saved to: {output_plots.replace('.png', '.svg')}")
+
+# Show figure after saving
+plt.show()
 
 #%% Save Comparison Data
 
